@@ -15,11 +15,14 @@ function searchForUser(request, response, User) {
         else {
             result.forEach(obj => renameKey(obj, '_id', 'userID'));
             usersMap = { 'usersList': result };
+            console.log(usersMap);
             return response.send(usersMap);
         }
     });
 
 }
+//we use this method to change the userID from _id to userID
+//to be accepted in front-end
 function renameKey(obj, oldKey, newKey) {
     obj[newKey] = obj[oldKey];
     delete obj[oldKey];

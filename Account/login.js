@@ -1,4 +1,4 @@
-var login=(request, response, User) => {
+var login = (request, response, User) => {
     User.findOne({ "email": request.body.email, "password": request.body.password }, (err, user) => {
         if (err) {
             console.log("login: " + err);
@@ -15,7 +15,7 @@ var login=(request, response, User) => {
                 "userProfilePicURL": user.userProfilePicURL,
                 "active": user.active,
                 "followersList": user.followersList,
-                "followingRankedList": user.followingRankedList,
+                "followingRankedMap": user.followingRankedMap,
                 "postsList": user.postsList
             }
             response.send(userDataMap);
@@ -29,4 +29,4 @@ var login=(request, response, User) => {
 
     });
 };
-module.exports=login;
+module.exports = login;

@@ -9,10 +9,10 @@ const BodyParser = require('body-parser');
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 var path = require('path');
-const socketConnection = require('./socket.js');
-const searchForUser = require('./Users/searchForUser.js');
+const socketConnection = require('./Socket/socket.js');
+const searchForUser = require('./Users/search_for_user.js');
 const { response } = require('express');
-const { follow, unFollow } = require('./Users/follow.js');
+const { loadFollowersList, loadFollowingList } = require('./Users/load_users_list.js');
 var publicDir = path.join(__dirname, 'usersProfilePictures');
 
 
@@ -46,10 +46,9 @@ app.post('/account/uploadProfilePic', (request, response) => updateProfilePic(re
 
 //users routes
 app.get('/users/search/:userName', (request, response) => searchForUser(request, response, User));
-app.patch('/users/follow', (request, response) => follow(request, response, User));
-app.patch('/users/unFollow', (request, response) => unFollow(request, response, User));
+app.get('/users/loadFollowingList/:userID', (request, response) => loadFollowingList(request, response, User));
+app.get('/users/loadFollowersList/:userID', (request, response) => loadFollowersList(request, response, User));
 
 //socket route
-io.on('connection', socketConnection);
-
+io.on('connection', (socket) => socketConnection(socket, User, io));
 

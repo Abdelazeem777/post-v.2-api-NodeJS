@@ -1,7 +1,7 @@
 //TODO: I need to pass User var to make the method works
 //Also I intended to move all function to a separated files to make the server module cleaner
 //if it didn't work just move the signup function back to the server module
-var signup=(request, response, User) => {
+var signup = (request, response, User) => {
     //check if the user is exist or not at first
     User.findOne({ "email": request.body.email }, (err, user) => {
         if (err) {
@@ -18,7 +18,7 @@ var signup=(request, response, User) => {
 
         //if not exist
         else {
-
+            console.log(request.body);
             User.insertOne(request.body, (error, result) => {
                 if (error) {
                     console.log("signUp: " + error);
@@ -32,14 +32,14 @@ var signup=(request, response, User) => {
                     "userProfilePicURL": request.body.userProfilePicURL,
                     "active": request.body.active,
                     "followersList": request.body.followersList,
-                    "followingRankedList": request.body.followingRankedList,
+                    "followingRankedMap": request.body.followingRankedMap,
                     "postsList": request.body.postsList
                 };
                 response.send(userDataMap);
-                console.log(userDataMap);
+
             });
         }
     });
 
 };
-module.exports=signup;
+module.exports = signup;
