@@ -1,18 +1,13 @@
-var usersSocketIDsMap = new Map();
+var usersSocketsMap = new Map();
 
-function addClientToMap(userID, socketId) {
-    if (!usersSocketIDsMap.has(userID)) {
-        usersSocketIDsMap.set(userID, socketId);
-    }
+function addClientToMap(userID, socket) {
+    usersSocketsMap.set(userID, socket);
 }
 
 function removeClientFromMap(userID) {
-    if (usersSocketIDsMap.has(userID)) {
-        usersSocketIDsMap.delete(userID);
-    }
-
+    usersSocketsMap.delete(userID);
 }
 
 
 
-module.exports = { usersSocketIDsMap, addClientToMap, removeClientFromMap }
+module.exports = { usersSocketsMap, addClientToMap, removeClientFromMap }

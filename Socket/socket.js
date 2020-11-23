@@ -1,5 +1,5 @@
 const { setActiveToTrue, setActiveToFalse } = require('../Account/active_status.js');
-var { usersSocketIDsMap, addClientToMap, removeClientFromMap } = require('./socket_users_ID_map.js');
+var { usersSocketsMap, addClientToMap, removeClientFromMap } = require('./socket_users_ID_map.js');
 const ObjectID = require('mongodb').ObjectID;
 
 const New_USER_CONNECT_EVENT = 'newUserConnect';
@@ -16,7 +16,7 @@ function socketConnection(socketP, UserP, ioP) {
     var userID = socket.handshake.query.userID;
     addClientToMap(userID, socket);
     setActiveToTrue(User, userID);
-    console.log('Connected users: ' + [...usersSocketIDsMap.keys()].toString());
+    console.log('Connected users: ' + [...usersSocketsMap.keys()].toString());
 
     io.emit(New_USER_CONNECT_EVENT, userID);
     socket.on(USER_DISCONNECTING_EVENT, userDisconnecting);
@@ -35,8 +35,8 @@ async function follow(dataJson) {
     targetUserID = dataJson.targetUserID;
     rank = dataJson.rank;
 
-    currentUserSocket = usersSocketIDsMap.get(currentUserID);
-    targetUserSocket = usersSocketIDsMap.get(targetUserID);
+    currentUserSocket = usersSocketsMap.get(currentUserID);
+    targetUserSocket = usersSocketsMap.get(targetUserID);
 
     addTargetIDToCurrentUserFollowingList(currentUserID, targetUserID, rank)
         .then(() => {
@@ -44,7 +44,7 @@ async function follow(dataJson) {
                 .then(() => {
                     console.log('follow Done');
                     if (targetUserSocket != null)
-                        targetUserSocket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID });
+                        targetUserSocket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
                     if (currentUserSocket != null)
                         currentUserSocket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
                 },
@@ -75,8 +75,8 @@ async function unFollow(dataJson) {
     rank = dataJson.rank;
     console.log(dataJson);
 
-    currentUserSocket = usersSocketIDsMap.get(currentUserID);
-    targetUserSocket = usersSocketIDsMap.get(targetUserID);
+    currentUserSocket = usersSocketsMap.get(currentUserID);
+    targetUserSocket = usersSocketsMap.get(targetUserID);
 
 
 
@@ -86,7 +86,7 @@ async function unFollow(dataJson) {
                 .then(() => {
                     console.log('unFollow Done');
                     if (targetUserSocket != null)
-                        targetUserSocket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID });
+                        targetUserSocket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
                     if (currentUserSocket != null)
                         currentUserSocket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
                 },
@@ -117,7 +117,7 @@ function addNewPost(newPost) {
 function userDisconnecting(userID) {
     removeClientFromMap(userID);
     console.log("disconnected: " + userID);
-    console.log("Connected users: " + [...usersSocketIDsMap.keys()].toString());
+    console.log("Connected users: " + [...usersSocketsMap.keys()].toString());
     io.emit(USER_DISCONNECTING_EVENT, userID);
     setActiveToFalse(User, userID);
 }
