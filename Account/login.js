@@ -15,7 +15,7 @@ var login = (request, response, User) => {
                 "userProfilePicURL": user.userProfilePicURL,
                 "active": user.active,
                 "followersList": user.followersList,
-                "followingRankedMap": user.followingRankedMap,
+                "followingRankedList": user.followingRankedList,
                 "postsList": user.postsList
             }
             response.send(userDataMap);

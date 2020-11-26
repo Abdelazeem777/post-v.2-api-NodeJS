@@ -38,11 +38,10 @@ async function follow(dataJson) {
     currentUserSocket = usersSocketsMap.get(currentUserID);
     targetUserSocket = usersSocketsMap.get(targetUserID);
 
-    addTargetIDToCurrentUserFollowingList(currentUserID, targetUserID, rank)
+    addTargetIDToCurrentUserFollowingList(currentUserID, targetUserID)
         .then(() => {
             addCurrentUserIDtoTargetUserFollowersList(currentUserID, targetUserID)
                 .then(() => {
-                    console.log('follow Done');
                     if (targetUserSocket != null)
                         targetUserSocket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
                     if (currentUserSocket != null)
@@ -56,11 +55,9 @@ async function follow(dataJson) {
 
 }
 
-async function addTargetIDToCurrentUserFollowingList(currentUserID, targetUserID, rank) {
+async function addTargetIDToCurrentUserFollowingList(currentUserID, targetUserID) {
     const query = { '_id': ObjectID(currentUserID) };
-    const options = {
-        $set: { ["followingRankedMap." + rank]: targetUserID }
-    };
+    const options = { $addToSet: { followingRankedList: targetUserID } };
     await User.updateOne(query, options);
 }
 async function addCurrentUserIDtoTargetUserFollowersList(currentUserID, targetUserID) {
@@ -73,18 +70,16 @@ async function unFollow(dataJson) {
     currentUserID = dataJson.currentUserID;
     targetUserID = dataJson.targetUserID;
     rank = dataJson.rank;
-    console.log(dataJson);
 
     currentUserSocket = usersSocketsMap.get(currentUserID);
     targetUserSocket = usersSocketsMap.get(targetUserID);
 
 
 
-    removeTargetIDFromCurrentUserFollowingList(currentUserID, targetUserID, rank)
+    removeTargetIDFromCurrentUserFollowingList(currentUserID, targetUserID)
         .then(() => {
             removeCurrentUserIDFromTargetUserFollowersList(currentUserID, targetUserID)
                 .then(() => {
-                    console.log('unFollow Done');
                     if (targetUserSocket != null)
                         targetUserSocket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
                     if (currentUserSocket != null)
@@ -98,9 +93,9 @@ async function unFollow(dataJson) {
 
 
 
-async function removeTargetIDFromCurrentUserFollowingList(currentUserID, _, rank) {
+async function removeTargetIDFromCurrentUserFollowingList(currentUserID, targetUserID) {
     const query = { '_id': ObjectID(currentUserID) };
-    const options = { $unset: { ["followingRankedMap." + rank]: '' } };
+    const options = { $pull: { followingRankedList: targetUserID } };
     await User.updateOne(query, options);
 }
 async function removeCurrentUserIDFromTargetUserFollowersList(currentUserID, targetUserID) {

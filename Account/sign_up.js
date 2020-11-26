@@ -32,7 +32,7 @@ var signup = (request, response, User) => {
                     "userProfilePicURL": request.body.userProfilePicURL,
                     "active": request.body.active,
                     "followersList": request.body.followersList,
-                    "followingRankedMap": request.body.followingRankedMap,
+                    "followingRankedList": request.body.followingRankedList,
                     "postsList": request.body.postsList
                 };
                 response.send(userDataMap);
