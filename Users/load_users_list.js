@@ -1,5 +1,3 @@
-const { query } = require('express');
-
 const ObjectID = require('mongodb').ObjectID;
 function loadFollowingList(request, response, User) {
     var userID = request.params.userID;

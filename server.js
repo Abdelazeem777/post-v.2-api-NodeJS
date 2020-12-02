@@ -4,6 +4,7 @@ const alternateLogin = require('./Account/alternate_login.js');
 const updateProfilePic = require('./Account/update_profile_pic.js');
 const updateProfileData = require('./Account/update_profile_data.js');
 const deleteAccount = require('./Account/delete_account.js');
+const deletePost = require('./Posts/deletePost.js');
 const express = require('express');
 const BodyParser = require('body-parser');
 const MongoClient = require('mongodb').MongoClient;
@@ -17,6 +18,7 @@ var publicDir = path.join(__dirname, 'usersProfilePictures');
 
 
 var User;
+var Posts;
 var app = express();
 var http = require('http').Server(app);
 const io = require('socket.io')(http);
@@ -29,6 +31,7 @@ http.listen(3000, () => {
         assert.strictEqual(null, err);
         const db = client.db('postDB');
         User = db.collection('user');
+        Posts = db.collection('posts');
         console.log('Connected successfully to server');
 
 
@@ -49,6 +52,9 @@ app.get('/users/search/:userName', (request, response) => searchForUser(request,
 app.get('/users/loadFollowingList/:userID', (request, response) => loadFollowingList(request, response, User));
 app.get('/users/loadFollowersList/:userID', (request, response) => loadFollowersList(request, response, User));
 
+//posts routes
+app.post('/posts/deletePost', (request, response) => deletePost(request, response, Posts, User));
+
 //socket route
-io.on('connection', (socket) => socketConnection(socket, User, io));
+io.on('connection', (socket) => socketConnection(socket, User, Posts, io));
 
