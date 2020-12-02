@@ -1,5 +1,12 @@
 const { setActiveToTrue, setActiveToFalse } = require('../Account/active_status.js');
-var { usersSocketsMap, addClientToMap, removeClientFromMap } = require('./socket_users_ID_map.js');
+var {
+    usersSocketsMap,
+    addClientToMap,
+    removeClientFromMap,
+    usersFollowersSocketMap,
+    addCurrentUserSocketToTargetFollowersList,
+    removeCurrentUserSocketFromTargetFollowersList,
+} = require('./socket_users_ID_map.js');
 const ObjectID = require('mongodb').ObjectID;
 
 const New_USER_CONNECT_EVENT = 'newUserConnect';
@@ -8,17 +15,14 @@ const FOLLOW_EVENT = 'follow';
 const UNFOLLOW_EVENT = 'unFollow';
 const NEW_POST_EVENT = 'newPost';
 
-function socketConnection(socketP, UserP, ioP) {
+function socketConnection(socketP, UserP, PostsP, ioP) {
     User = UserP;
     io = ioP;
     socket = socketP;
+    Posts = PostsP;
 
-    var userID = socket.handshake.query.userID;
-    addClientToMap(userID, socket);
-    setActiveToTrue(User, userID);
-    console.log('Connected users: ' + [...usersSocketsMap.keys()].toString());
+    onUserConnect();
 
-    io.emit(New_USER_CONNECT_EVENT, userID);
     socket.on(USER_DISCONNECTING_EVENT, userDisconnecting);
 
     socket.on(FOLLOW_EVENT, follow);
@@ -28,6 +32,16 @@ function socketConnection(socketP, UserP, ioP) {
 }
 
 
+
+function onUserConnect() {
+    var userID = socket.handshake.query.userID;
+    if (userID != null) {
+        addClientToMap(userID, socket);
+        setActiveToTrue(User, userID);
+        console.log('Connected users: ' + [...usersSocketsMap.keys()].toString());
+        io.emit(New_USER_CONNECT_EVENT, userID);
+    }
+}
 
 async function follow(dataJson) {
 
@@ -42,10 +56,11 @@ async function follow(dataJson) {
         .then(() => {
             addCurrentUserIDtoTargetUserFollowersList(currentUserID, targetUserID)
                 .then(() => {
-                    if (targetUserSocket != null)
-                        targetUserSocket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
-                    if (currentUserSocket != null)
-                        currentUserSocket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
+                    if (socketIsDefined(targetUserSocket))
+                        targetUserSocket.socket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
+                    if (socketIsDefined(currentUserSocket))
+                        currentUserSocket.socket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
+                    addCurrentUserSocketToTargetFollowersList(currentUserSocket, targetUserID);
                 },
                     (error) => console.error("add current to target error: " + error));
         },
@@ -53,6 +68,14 @@ async function follow(dataJson) {
         );
 
 
+}
+
+function socketIsDefined(userSocket) {
+    if (userSocket != null) {
+        if (userSocket.socket != null)
+            return true
+    }
+    return false
 }
 
 async function addTargetIDToCurrentUserFollowingList(currentUserID, targetUserID) {
@@ -80,18 +103,17 @@ async function unFollow(dataJson) {
         .then(() => {
             removeCurrentUserIDFromTargetUserFollowersList(currentUserID, targetUserID)
                 .then(() => {
-                    if (targetUserSocket != null)
-                        targetUserSocket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
-                    if (currentUserSocket != null)
-                        currentUserSocket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
+                    if (socketIsDefined(targetUserSocket))
+                        targetUserSocket.socket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
+                    if (socketIsDefined(currentUserSocket))
+                        currentUserSocket.socket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
+                    removeCurrentUserSocketFromTargetFollowersList(currentUserSocket, targetUserID);
                 },
                     (error) => console.error("remove current from target error: " + error));
         },
             (error) => console.error("remove target from current error: " + error));
 
 }
-
-
 
 async function removeTargetIDFromCurrentUserFollowingList(currentUserID, targetUserID) {
     const query = { '_id': ObjectID(currentUserID) };
@@ -105,8 +127,45 @@ async function removeCurrentUserIDFromTargetUserFollowersList(currentUserID, tar
 }
 
 function addNewPost(newPost) {
-    console.log(newPost);
 
+    console.log(newPost);
+    Posts.insertOne(newPost, async (error, result) => {
+        if (error)
+            console.error("addNewPost: " + error);
+        else {
+            newPost = {
+                'postID': result.insertedId,
+                'userID': newPost.userID,
+                'postContent': newPost.postContent,
+                'postType': newPost.postType,
+                'timestamp': newPost.timestamp,
+                'reactsList': newPost.reactsList,
+                'numberOfShares': newPost.numberOfShares,
+                'commentsList': newPost.commentsList,
+            }
+            await addPostIDToCurrentUserPostList(newPost.userID, newPost.postID);
+            sendPostToCurrentUserFollowers(newPost.userID, newPost);
+
+        }
+    });
+
+}
+async function addPostIDToCurrentUserPostList(userID, postID) {
+    const query = { _id: ObjectID(userID) };
+    const options = { $addToSet: { postsList: postID } };
+    await User.updateOne(query, options);
+
+}
+function sendPostToCurrentUserFollowers(currentUserID, newPost) {
+    var followersSocketList = new Array();
+    if (usersFollowersSocketMap.has(currentUserID)) {
+        followersSocketList = usersFollowersSocketMap.get(currentUserID);
+        followersSocketList.forEach((userSocket) => {
+            userSocket.socket.emit(NEW_POST_EVENT, newPost);
+        });
+    }
+    currentUserSocket = usersSocketsMap.get(currentUserID).socket;
+    currentUserSocket.emit(NEW_POST_EVENT, newPost);
 }
 
 function userDisconnecting(userID) {
