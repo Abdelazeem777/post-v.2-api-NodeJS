@@ -24,7 +24,7 @@ async function thisUserIsExist(userID, userPassword, User) {
 }
 async function deletePostFromPostsDB(postID, userID, Posts) {
     var result = await Posts.deleteOne({ '_id': ObjectID(postID), 'userID': userID });
-    if (result.n = 1)
+    if (result.deletedCount === 1)
         return true;
     else
         return false;
