@@ -127,14 +127,12 @@ async function removeCurrentUserIDFromTargetUserFollowersList(currentUserID, tar
 }
 
 function addNewPost(newPost) {
-
-    console.log(newPost);
     Posts.insertOne(newPost, async (error, result) => {
         if (error)
             console.error("addNewPost: " + error);
         else {
             newPost = {
-                'postID': result.insertedId,
+                'postID': result.insertedId.toString(),
                 'userID': newPost.userID,
                 'postContent': newPost.postContent,
                 'postType': newPost.postType,
@@ -144,7 +142,7 @@ function addNewPost(newPost) {
                 'commentsList': newPost.commentsList,
             }
             await addPostIDToCurrentUserPostList(newPost.userID, newPost.postID);
-            sendPostToCurrentUserFollowers(newPost.userID, newPost);
+            sendPostToCurrentUserAndHisFollowers(newPost.userID, newPost);
 
         }
     });
@@ -152,11 +150,11 @@ function addNewPost(newPost) {
 }
 async function addPostIDToCurrentUserPostList(userID, postID) {
     const query = { _id: ObjectID(userID) };
-    const options = { $addToSet: { postsList: postID } };
+    const options = { $addToSet: { postsList: postID.toString() } };
     await User.updateOne(query, options);
 
 }
-function sendPostToCurrentUserFollowers(currentUserID, newPost) {
+function sendPostToCurrentUserAndHisFollowers(currentUserID, newPost) {
     var followersSocketList = new Array();
     if (usersFollowersSocketMap.has(currentUserID)) {
         followersSocketList = usersFollowersSocketMap.get(currentUserID);
@@ -164,6 +162,7 @@ function sendPostToCurrentUserFollowers(currentUserID, newPost) {
             userSocket.socket.emit(NEW_POST_EVENT, newPost);
         });
     }
+    console.log(newPost);
     currentUserSocket = usersSocketsMap.get(currentUserID).socket;
     currentUserSocket.emit(NEW_POST_EVENT, newPost);
 }
