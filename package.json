@@ -2,10 +2,10 @@
   "name": "post_api",
   "version": "1.0.0",
   "description": "Post API using Socket.io and MongoDB",
-  "main": "server.js",
+  "main": "main.js",
   "scripts": {
     "start": "node server",
-    "dev":"nodemon server"
+    "dev": "nodemon server"
   },
   "author": "",
   "license": "ISC",

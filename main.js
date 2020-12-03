@@ -14,6 +14,7 @@ const socketConnection = require('./Socket/socket.js');
 const searchForUser = require('./Users/search_for_user.js');
 const { response } = require('express');
 const { loadFollowersList, loadFollowingList } = require('./Users/load_users_list.js');
+const loadPostsList = require('./Posts/loadPostsList.js');
 var publicDir = path.join(__dirname, 'usersProfilePictures');
 
 
@@ -53,6 +54,7 @@ app.get('/users/loadFollowingList/:userID', (request, response) => loadFollowing
 app.get('/users/loadFollowersList/:userID', (request, response) => loadFollowersList(request, response, User));
 
 //posts routes
+app.get('/posts/getPosts/:userID', (request, response) => loadPostsList(request, response, Posts, User));
 app.post('/posts/deletePost', (request, response) => deletePost(request, response, Posts, User));
 
 //socket route

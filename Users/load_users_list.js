@@ -24,7 +24,7 @@ function loadFollowingList(request, response, User) {
             usersList.push(user);
         }
 
-        usersList.forEach(obj => renameKey(obj, '_id', 'userID'));
+        usersList.forEach(renameKey_id2userID);
         responseData = { 'usersList': usersList };
         return response.send(responseData);
     });
@@ -32,9 +32,9 @@ function loadFollowingList(request, response, User) {
 
 //we use this method to change the userID from _id to userID
 //to be accepted in front-end
-function renameKey(obj, oldKey, newKey) {
-    obj[newKey] = obj[oldKey];
-    delete obj[oldKey];
+function renameKey_id2userID(obj) {
+    obj['userID'] = obj['_id'];
+    delete obj['_id'];
 }
 
 function loadFollowersList(request, response, User) {
@@ -58,7 +58,7 @@ function loadFollowersList(request, response, User) {
                 return response.status(500).send(error);
             }
             else {
-                result.forEach(obj => renameKey(obj, '_id', 'userID'));
+                result.forEach(renameKey_id2userID);
                 return response.send({ 'usersList': result });
             }
         });
