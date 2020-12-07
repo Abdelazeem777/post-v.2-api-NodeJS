@@ -15,6 +15,7 @@ const searchForUser = require('./Users/search_for_user.js');
 const { response } = require('express');
 const { loadFollowersList, loadFollowingList } = require('./Users/load_users_list.js');
 const loadPostsList = require('./Posts/loadPostsList.js');
+const { initUsersSockets } = require('./Socket/socket_users_ID_map.js');
 var publicDir = path.join(__dirname, 'usersProfilePictures');
 
 
@@ -28,16 +29,19 @@ app.use(BodyParser.json({ limit: '50mb' }));
 app.use(BodyParser.urlencoded({ limit: '50mb', extended: true }));
 http.listen(3000, () => {
     // Connect to mongoDB
-    MongoClient.connect('mongodb://localhost:27017', { useUnifiedTopology: true, useNewUrlParser: true }, (err, client) => {
-        assert.strictEqual(null, err);
-        const db = client.db('postDB');
-        User = db.collection('user');
-        Posts = db.collection('posts');
-        console.log('Connected successfully to server');
+    MongoClient.connect('mongodb://localhost:27017',
+        { useUnifiedTopology: true, useNewUrlParser: true },
+        async (err, client) => {
+            assert.strictEqual(null, err);
+            const db = client.db('postDB');
+            User = db.collection('user');
+            Posts = db.collection('posts');
+            console.log('Connected successfully to server');
 
+            await initUsersSockets(User);
 
-        //client.close();
-    });
+            //client.close();
+        });
 });
 
 //account routes
