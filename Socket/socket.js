@@ -11,6 +11,7 @@ const ObjectID = require('mongodb').ObjectID;
 
 const New_USER_CONNECT_EVENT = 'newUserConnect';
 const USER_DISCONNECTING_EVENT = 'userDisconnecting';
+const USER_PAUSED = 'userPaused';
 const FOLLOW_EVENT = 'follow';
 const UNFOLLOW_EVENT = 'unFollow';
 const NEW_POST_EVENT = 'newPost';
@@ -23,6 +24,7 @@ function socketConnection(socketP, UserP, PostsP, ioP) {
 
     onUserConnect();
 
+    socket.on(USER_PAUSED, userPaused)
     socket.on(USER_DISCONNECTING_EVENT, userDisconnecting);
 
     socket.on(FOLLOW_EVENT, follow);
@@ -159,7 +161,7 @@ function sendPostToCurrentUserAndHisFollowers(currentUserID, newPost) {
     if (usersFollowersSocketMap.has(currentUserID)) {
         followersSocketList = usersFollowersSocketMap.get(currentUserID);
         followersSocketList.forEach((userSocket) => {
-            userSocket.socket.emit(NEW_POST_EVENT, newPost);
+            if (userSocket.socket != null) userSocket.socket.emit(NEW_POST_EVENT, newPost);
         });
     }
     console.log(newPost);
@@ -167,12 +169,28 @@ function sendPostToCurrentUserAndHisFollowers(currentUserID, newPost) {
     currentUserSocket.emit(NEW_POST_EVENT, newPost);
 }
 
+function userPaused(userID) {
+    notifyOtherUsers(userID);
+    setActiveToFalse(User, userID);
+}
+
+function notifyOtherUsers(userID) {
+    var followersSocketList = new Array();
+    if (usersFollowersSocketMap.has(userID)) {
+        followersSocketList = usersFollowersSocketMap.get(userID);
+        followersSocketList.forEach((userSocket) => {
+            if (userSocket.socket != null) userSocket.socket.emit(USER_PAUSED, userID);
+        });
+    }
+    userSocket = usersSocketsMap.get(userID).socket;
+    userSocket.emit(USER_PAUSED, userID);
+}
+
 function userDisconnecting(userID) {
     removeClientFromMap(userID);
     console.log("disconnected: " + userID);
     console.log("Connected users: " + [...usersSocketsMap.keys()].toString());
     io.emit(USER_DISCONNECTING_EVENT, userID);
-    setActiveToFalse(User, userID);
 }
 
 

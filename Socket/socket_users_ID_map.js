@@ -7,7 +7,7 @@ var usersSocketsMap = new Map();
 var usersFollowersSocketMap = new Map();
 
 async function initUsersSockets(User) {
-    console.log('initialing users sockets...');
+    console.log('Initializing users sockets...');
 
     const query = {};
     const options = { projection: { _id: 1, followersList: 1 } };
@@ -16,7 +16,7 @@ async function initUsersSockets(User) {
     initUsersToUsersSocketsMap(usersList);
     initFollowersSocketsToFollowersMap(usersList);
 
-    console.log('Done Initialing')
+    console.log('Done Initializing')
 }
 
 function initUsersToUsersSocketsMap(usersList) {
@@ -47,10 +47,6 @@ function removeClientFromMap(userID) {
 }
 
 function addCurrentUserSocketToTargetFollowersList(currentUserSocket, targetUserID) {
-    console.log(usersSocketsMap);
-    console.log(usersFollowersSocketMap);
-    console.log(currentUserSocket);
-    console.log(targetUserID);
     if (usersFollowersSocketMap.has(targetUserID)) {
         targetUserFollowersList = usersFollowersSocketMap.get(targetUserID);
         targetUserFollowersList.push(currentUserSocket);
