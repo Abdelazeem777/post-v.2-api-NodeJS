@@ -1,3 +1,4 @@
 usersProfilePictures/
 node_modules/
 .vscode/
+.jshintrc

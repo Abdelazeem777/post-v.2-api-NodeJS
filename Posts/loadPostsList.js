@@ -2,7 +2,7 @@ const ObjectID = require('mongodb').ObjectID;
 
 async function loadPostsList(request, response, Posts, User) {
     var userID = request.params.userID;
-    var postsIDsList = new Array();
+    var postsIDsList = [];
     postsIDsList = await getPostsIDs(userID, User);
 
     var postsList = await getPostsByPostsIDsList(postsIDsList, Posts);
@@ -21,7 +21,7 @@ async function getPostsIDs(userID, User) {
 }
 
 async function getPostsByPostsIDsList(postsIDsList, Posts) {
-    var postsList = new Array();
+    var postsList = [];
     for (let index = 0; index < postsIDsList.length; index++) {
         const postID = postsIDsList[index];
         const post = await getPostByPostID(postID, Posts);
@@ -39,7 +39,7 @@ function getPostByPostID(postID, Posts) {
 //we use this method to change the postID from _id to postID
 //to be accepted in front-end
 function renameKey_id2postID(obj) {
-    obj['postID'] = obj['_id'];
-    delete obj['_id'];
+    obj.postID = obj._id;
+    delete obj._id;
 }
 module.exports = loadPostsList;

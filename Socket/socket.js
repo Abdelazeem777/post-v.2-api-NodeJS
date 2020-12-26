@@ -76,9 +76,9 @@ async function follow(dataJson) {
 function socketIsDefined(userSocket) {
     if (userSocket != null) {
         if (userSocket.socket != null)
-            return true
+            return true;
     }
-    return false
+    return false;
 }
 
 async function addTargetIDToCurrentUserFollowingList(currentUserID, targetUserID) {
@@ -143,7 +143,7 @@ function addNewPost(newPost) {
                 'reactsList': newPost.reactsList,
                 'numberOfShares': newPost.numberOfShares,
                 'commentsList': newPost.commentsList,
-            }
+            };
             await addPostIDToCurrentUserPostList(newPost.userID, newPost.postID);
             sendPostToCurrentUserAndHisFollowers(newPost.userID, newPost);
 
@@ -158,7 +158,7 @@ async function addPostIDToCurrentUserPostList(userID, postID) {
 
 }
 function sendPostToCurrentUserAndHisFollowers(currentUserID, newPost) {
-    var followersSocketList = new Array();
+    var followersSocketList = [];
     if (usersFollowersSocketMap.has(currentUserID)) {
         followersSocketList = usersFollowersSocketMap.get(currentUserID);
         followersSocketList.forEach((userSocket) => {
@@ -176,7 +176,7 @@ function userPaused(userID) {
 }
 
 function notifyOtherUsers(userID) {
-    var followersSocketList = new Array();
+    var followersSocketList = [];
     if (usersFollowersSocketMap.has(userID)) {
         followersSocketList = usersFollowersSocketMap.get(userID);
         followersSocketList.forEach((userSocket) => {

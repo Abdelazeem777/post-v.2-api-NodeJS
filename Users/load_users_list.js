@@ -10,8 +10,8 @@ function loadFollowingList(request, response, User) {
             return response.status(500).send(error);
         }
 
-        let usersList = new Array();
-        let followingUsersIDList = new Array();
+        let usersList = [];
+        let followingUsersIDList = [];
         followingUsersIDList = result.followingRankedList;
 
         for (let index = 0; index < followingUsersIDList.length; index++) {
