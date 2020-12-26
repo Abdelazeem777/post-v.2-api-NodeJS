@@ -24,11 +24,11 @@ function socketConnection(socketP, UserP, PostsP, ioP) {
 
     onUserConnect();
 
-    socket.on(USER_PAUSED, userPaused)
+    socket.on(USER_PAUSED, userPaused);
     socket.on(USER_DISCONNECTING_EVENT, userDisconnecting);
 
     socket.on(FOLLOW_EVENT, follow);
-    socket.on(UNFOLLOW_EVENT, unFollow)
+    socket.on(UNFOLLOW_EVENT, unFollow);
 
     socket.on(NEW_POST_EVENT, addNewPost);
 }
@@ -37,6 +37,7 @@ function socketConnection(socketP, UserP, PostsP, ioP) {
 
 function onUserConnect() {
     var userID = socket.handshake.query.userID;
+    console.log(userID);
     if (userID != null) {
         addClientToMap(userID, socket);
         setActiveToTrue(User, userID);

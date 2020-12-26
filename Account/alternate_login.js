@@ -1,5 +1,6 @@
-//the problem is u r not sending an email so its null and that's mean it will return any user from the db
-//the solution is to send email with request whatever the way is
+const ObjectID = require('mongodb').ObjectID;
+
+//TODO: I need to modify the user _id by wrapping it with ObjectID
 var alternateLogin = (request, response, User) => {
     User.findOne({ "email": request.body.email }, (err, user) => {
         if (err) {
@@ -21,7 +22,7 @@ var alternateLogin = (request, response, User) => {
                     "userProfilePicURL": request.body.userProfilePicURL,
                     "active": request.body.active,
                     "followersList": request.body.followersList,
-                    "followingRankedMap": request.body.followingRankedMap,
+                    "followingRankedList": request.body.followingRankedList,
                     "postsList": request.body.postsList
                 }
                 response.send(userDataMap);
@@ -45,7 +46,7 @@ var alternateLogin = (request, response, User) => {
                     "userProfilePicURL": request.body.userProfilePicURL,
                     "active": request.body.active,
                     "followersList": request.body.followersList,
-                    "followingRankedMap": request.body.followingRankedMap,
+                    "followingRankedList": request.body.followingRankedList,
                     "postsList": request.body.postsList
                 }
                 response.send(userDataMap);

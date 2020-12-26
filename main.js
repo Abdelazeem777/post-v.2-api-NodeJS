@@ -12,10 +12,10 @@ const assert = require('assert');
 var path = require('path');
 const socketConnection = require('./Socket/socket.js');
 const searchForUser = require('./Users/search_for_user.js');
-const { response } = require('express');
 const { loadFollowersList, loadFollowingList } = require('./Users/load_users_list.js');
 const loadPostsList = require('./Posts/loadPostsList.js');
 const { initUsersSockets } = require('./Socket/socket_users_ID_map.js');
+const updateUserRank = require('./Account/update_user_rank.js');
 var publicDir = path.join(__dirname, 'usersProfilePictures');
 
 
@@ -51,6 +51,7 @@ app.post('/account/alternateLogin', (request, response) => alternateLogin(reques
 app.delete('/account/deleteAccount/:email', (request, response) => deleteAccount(request, response, User));
 app.patch('/account/updateProfileData', (request, response) => updateProfileData(request, response, User));
 app.post('/account/uploadProfilePic', (request, response) => updateProfilePic(request, response, User));
+app.post('/account/updateUserRank',(request,response)=>updateUserRank(request,response,User));
 
 //users routes
 app.get('/users/search/:userName', (request, response) => searchForUser(request, response, User));
