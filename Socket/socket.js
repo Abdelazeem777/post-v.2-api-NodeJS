@@ -37,7 +37,7 @@ function socketConnection(socketP, UserP, PostsP, ioP) {
 
 function onUserConnect() {
     var userID = socket.handshake.query.userID;
-    console.log(userID);
+    console.log("Connected user: "+userID);
     if (userID != null) {
         addClientToMap(userID, socket);
         setActiveToTrue(User, userID);
@@ -46,8 +46,7 @@ function onUserConnect() {
     }
 }
 
-async function follow(dataJson) {
-
+function follow(dataJson) {
     currentUserID = dataJson.currentUserID;
     targetUserID = dataJson.targetUserID;
     rank = dataJson.rank;
@@ -91,7 +90,7 @@ async function addCurrentUserIDtoTargetUserFollowersList(currentUserID, targetUs
     const options = { $addToSet: { followersList: currentUserID } };
     await User.updateOne(query, options);
 }
-async function unFollow(dataJson) {
+function unFollow(dataJson) {
 
     currentUserID = dataJson.currentUserID;
     targetUserID = dataJson.targetUserID;

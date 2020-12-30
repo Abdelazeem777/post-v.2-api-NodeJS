@@ -20,7 +20,7 @@ function loadFollowingList(request, response, User) {
             const options = {
                 projection: { _id: 1, userName: 1, bio: 1, userProfilePicURL: 1, active: 1 },
             };
-            user = await User.findOne(query, options)
+            user = await User.findOne(query, options);
             usersList.push(user);
         }
 
@@ -33,8 +33,8 @@ function loadFollowingList(request, response, User) {
 //we use this method to change the userID from _id to userID
 //to be accepted in front-end
 function renameKey_id2userID(obj) {
-    obj['userID'] = obj['_id'];
-    delete obj['_id'];
+    obj.userID = obj._id;
+    delete obj._id;
 }
 
 function loadFollowersList(request, response, User) {
