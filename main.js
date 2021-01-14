@@ -12,7 +12,7 @@ const assert = require('assert');
 var path = require('path');
 const socketConnection = require('./Socket/socket.js');
 const searchForUser = require('./Users/search_for_user.js');
-const { loadFollowersList, loadFollowingList } = require('./Users/load_users_list.js');
+const { loadFollowersUsers, loadFollowingUsers } = require('./Users/load_users_list.js');
 const loadPostsList = require('./Posts/loadPostsList.js');
 const { initUsersSockets } = require('./Socket/socket_users_ID_map.js');
 const updateUserRank = require('./Account/update_user_rank.js');
@@ -55,8 +55,8 @@ app.post('/account/updateUserRank',(request,response)=>updateUserRank(request,re
 
 //users routes
 app.get('/users/search/:userName', (request, response) => searchForUser(request, response, User));
-app.get('/users/loadFollowingList/:userID', (request, response) => loadFollowingList(request, response, User));
-app.get('/users/loadFollowersList/:userID', (request, response) => loadFollowersList(request, response, User));
+app.get('/users/loadFollowingUsers/:userID', (request, response) => loadFollowingUsers(request, response, User));
+app.get('/users/loadFollowersUsers/:userID', (request, response) => loadFollowersUsers(request, response, User));
 
 //posts routes
 app.get('/posts/getPosts/:userID', (request, response) => loadPostsList(request, response, Posts, User));

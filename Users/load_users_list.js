@@ -1,12 +1,12 @@
 const ObjectID = require('mongodb').ObjectID;
-function loadFollowingList(request, response, User) {
+function loadFollowingUsers(request, response, User) {
     var userID = request.params.userID;
 
     User.findOne({ '_id': ObjectID(userID) }, {
         projection: { followingRankedList: 1 }
     }, async (error, result) => {
         if (error) {
-            console.error("loadFollowingList: " + error);
+            console.error("loadFollowingUsers: " + error);
             return response.status(500).send(error);
         }
 
@@ -21,6 +21,7 @@ function loadFollowingList(request, response, User) {
                 projection: { _id: 1, userName: 1, bio: 1, userProfilePicURL: 1, active: 1 },
             };
             user = await User.findOne(query, options);
+            if(user===null)continue;
             usersList.push(user);
         }
 
@@ -33,17 +34,18 @@ function loadFollowingList(request, response, User) {
 //we use this method to change the userID from _id to userID
 //to be accepted in front-end
 function renameKey_id2userID(obj) {
-    obj.userID = obj._id;
+    if(obj._id!= null)
+        obj.userID = obj._id;
     delete obj._id;
 }
 
-function loadFollowersList(request, response, User) {
+function loadFollowersUsers(request, response, User) {
     var userID = request.params.userID;
     User.findOne({ '_id': ObjectID(userID) }, {
         projection: { followersList: 1 }
     }, (error, result) => {
         if (error) {
-            console.error("loadFollowersList: " + error);
+            console.error("loadFollowersUsers: " + error);
             return response.status(500).send(error);
         }
         var followersUsersIDList = result.followersList;
@@ -54,7 +56,7 @@ function loadFollowersList(request, response, User) {
         };
         User.find(query, options).toArray((error, result) => {
             if (error) {
-                console.error("loadFollowersList: " + error);
+                console.error("loadFollowersUsers: " + error);
                 return response.status(500).send(error);
             }
             else {
@@ -67,4 +69,4 @@ function loadFollowersList(request, response, User) {
 
 
 
-module.exports = { loadFollowersList, loadFollowingList };
+module.exports = { loadFollowersUsers, loadFollowingUsers };
