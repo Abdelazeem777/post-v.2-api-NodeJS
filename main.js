@@ -16,6 +16,7 @@ const { loadFollowersUsers, loadFollowingUsers } = require('./Users/load_users_l
 const loadPostsList = require('./Posts/loadPostsList.js');
 const { initUsersSockets } = require('./Socket/socket_users_ID_map.js');
 const updateUserRank = require('./Account/update_user_rank.js');
+const getNotifications = require('./Notifications/get_notifications.js');
 var publicDir = path.join(__dirname, 'usersProfilePictures');
 
 
@@ -36,6 +37,7 @@ http.listen(3000, () => {
             const db = client.db('postDB');
             User = db.collection('user');
             Posts = db.collection('posts');
+            Notifications = db.collection('notifications');
             console.log('Connected successfully to server');
 
             await initUsersSockets(User);
@@ -51,7 +53,7 @@ app.post('/account/alternateLogin', (request, response) => alternateLogin(reques
 app.delete('/account/deleteAccount/:email', (request, response) => deleteAccount(request, response, User));
 app.patch('/account/updateProfileData', (request, response) => updateProfileData(request, response, User));
 app.post('/account/uploadProfilePic', (request, response) => updateProfilePic(request, response, User));
-app.post('/account/updateUserRank',(request,response)=>updateUserRank(request,response,User));
+app.post('/account/updateUserRank', (request, response) => updateUserRank(request, response, User));
 
 //users routes
 app.get('/users/search/:userName', (request, response) => searchForUser(request, response, User));
@@ -62,6 +64,9 @@ app.get('/users/loadFollowersUsers/:userID', (request, response) => loadFollower
 app.get('/posts/getPosts/:userID', (request, response) => loadPostsList(request, response, Posts, User));
 app.post('/posts/deletePost', (request, response) => deletePost(request, response, Posts, User));
 
+//notifications routes
+app.get('/posts/getNotifications/:userID', (request, response) => getNotifications(request, response, Notifications, User));
+
 //socket route
-io.on('connection', (socket) => socketConnection(socket, User, Posts, io));
+io.on('connection', (socket) => socketConnection(socket, User, Posts, Notifications, io));
 

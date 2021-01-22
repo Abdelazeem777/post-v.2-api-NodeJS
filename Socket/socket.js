@@ -7,6 +7,7 @@ var {
     addCurrentUserSocketToTargetFollowersList,
     removeCurrentUserSocketFromTargetFollowersList,
 } = require('./socket_users_ID_map.js');
+const { getUserNameAndProfilePic } = require('../Notifications/get_notifications.js');
 const ObjectID = require('mongodb').ObjectID;
 
 const New_USER_CONNECT_EVENT = 'newUserConnect';
@@ -15,12 +16,14 @@ const USER_PAUSED = 'userPaused';
 const FOLLOW_EVENT = 'follow';
 const UNFOLLOW_EVENT = 'unFollow';
 const NEW_POST_EVENT = 'newPost';
+const NOTIFICATION = 'notification';
 
-function socketConnection(socketP, UserP, PostsP, ioP) {
+function socketConnection(socketP, UserP, PostsP, NotificationsP, ioP) {
     User = UserP;
     io = ioP;
     socket = socketP;
     Posts = PostsP;
+    Notifications = NotificationsP;
 
     onUserConnect();
 
@@ -37,7 +40,7 @@ function socketConnection(socketP, UserP, PostsP, ioP) {
 
 function onUserConnect() {
     var userID = socket.handshake.query.userID;
-    console.log("Connected user: "+userID);
+    console.log("Connected user: " + userID);
     if (userID != null) {
         addClientToMap(userID, socket);
         setActiveToTrue(User, userID);
@@ -46,7 +49,7 @@ function onUserConnect() {
     }
 }
 
-function follow(dataJson) {
+async function follow(dataJson) {
     currentUserID = dataJson.currentUserID;
     targetUserID = dataJson.targetUserID;
     rank = dataJson.rank;
@@ -54,21 +57,16 @@ function follow(dataJson) {
     currentUserSocket = usersSocketsMap.get(currentUserID);
     targetUserSocket = usersSocketsMap.get(targetUserID);
 
-    addTargetIDToCurrentUserFollowingList(currentUserID, targetUserID)
-        .then(() => {
-            addCurrentUserIDtoTargetUserFollowersList(currentUserID, targetUserID)
-                .then(() => {
-                    if (socketIsDefined(targetUserSocket))
-                        targetUserSocket.socket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
-                    if (socketIsDefined(currentUserSocket))
-                        currentUserSocket.socket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
-                    addCurrentUserSocketToTargetFollowersList(currentUserSocket, targetUserID);
-                },
-                    (error) => console.error("add current to target error: " + error));
-        },
-            (error) => console.error("add target to current error: " + error)
-        );
+    await addTargetIDToCurrentUserFollowingList(currentUserID, targetUserID);
+    await addCurrentUserIDtoTargetUserFollowersList(currentUserID, targetUserID);
 
+    if (socketIsDefined(targetUserSocket))
+        targetUserSocket.socket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
+    if (socketIsDefined(currentUserSocket))
+        currentUserSocket.socket.emit(FOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
+    addCurrentUserSocketToTargetFollowersList(currentUserSocket, targetUserID);
+
+    notify({ from: currentUserID, to: targetUserID, notificationType: 'Follow' });
 
 }
 
@@ -90,7 +88,7 @@ async function addCurrentUserIDtoTargetUserFollowersList(currentUserID, targetUs
     const options = { $addToSet: { followersList: currentUserID } };
     await User.updateOne(query, options);
 }
-function unFollow(dataJson) {
+async function unFollow(dataJson) {
 
     currentUserID = dataJson.currentUserID;
     targetUserID = dataJson.targetUserID;
@@ -99,21 +97,14 @@ function unFollow(dataJson) {
     currentUserSocket = usersSocketsMap.get(currentUserID);
     targetUserSocket = usersSocketsMap.get(targetUserID);
 
+    await removeTargetIDFromCurrentUserFollowingList(currentUserID, targetUserID);
+    await removeCurrentUserIDFromTargetUserFollowersList(currentUserID, targetUserID);
 
-
-    removeTargetIDFromCurrentUserFollowingList(currentUserID, targetUserID)
-        .then(() => {
-            removeCurrentUserIDFromTargetUserFollowersList(currentUserID, targetUserID)
-                .then(() => {
-                    if (socketIsDefined(targetUserSocket))
-                        targetUserSocket.socket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
-                    if (socketIsDefined(currentUserSocket))
-                        currentUserSocket.socket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
-                    removeCurrentUserSocketFromTargetFollowersList(currentUserSocket, targetUserID);
-                },
-                    (error) => console.error("remove current from target error: " + error));
-        },
-            (error) => console.error("remove target from current error: " + error));
+    if (socketIsDefined(targetUserSocket))
+        targetUserSocket.socket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
+    if (socketIsDefined(currentUserSocket))
+        currentUserSocket.socket.emit(UNFOLLOW_EVENT, { 'from': currentUserID, 'to': targetUserID, 'rank': rank });
+    removeCurrentUserSocketFromTargetFollowersList(currentUserSocket, targetUserID);
 
 }
 
@@ -170,11 +161,11 @@ function sendPostToCurrentUserAndHisFollowers(currentUserID, newPost) {
 }
 
 function userPaused(userID) {
-    notifyOtherUsers(userID);
+    changeUserStateOnOtherUsers(userID);
     setActiveToFalse(User, userID);
 }
 
-function notifyOtherUsers(userID) {
+function changeUserStateOnOtherUsers(userID) {
     var followersSocketList = [];
     if (usersFollowersSocketMap.has(userID)) {
         followersSocketList = usersFollowersSocketMap.get(userID);
@@ -192,6 +183,32 @@ function userDisconnecting(userID) {
     console.log("Connected users: " + [...usersSocketsMap.keys()].toString());
     io.emit(USER_DISCONNECTING_EVENT, userID);
 }
+//TODO: still need more works on it
+async function notify({ from, to, notificationType, reactType }) {
+    notificationMap = {
+        'fromUserID': from,
+        'toUserID': to,
+        'notificationType': notificationType,
+        'reactType': reactType,
+        'timestamp': + new Date(),
+        'seen': false,
+    };
+    notificationMap = await saveToDB(notificationMap);
+    user = await getUserNameAndProfilePic(from, User);
+    notifyUser(to, notificationMap, user);
+}
+async function saveToDB(notificationMap) {
 
+    result = await Notifications.insertOne(notificationMap);
+    notificationMap.notificationID = result.insertedId;
+    delete notificationMap.toUserID;
+    return notificationMap;
+}
+
+function notifyUser(targetUserID, notificationMap, user) {
+    console.log("targetUserID: " + targetUserID);
+    userSocket = usersSocketsMap.get(targetUserID).socket;
+    userSocket.emit(NOTIFICATION, [notificationMap, user]);
+}
 
 module.exports = socketConnection;

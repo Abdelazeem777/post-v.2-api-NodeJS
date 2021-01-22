@@ -14,8 +14,6 @@ var signup = (request, response, User) => {
             return response.status(400).send({ "message": "This email is already exist!" });
         }
 
-
-
         //if not exist
         else {
             console.log(request.body);
